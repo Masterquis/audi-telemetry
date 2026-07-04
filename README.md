@@ -7,7 +7,7 @@
 
 Many vehicles require expensive repairs that could have been reduced or avoided through consistent maintenance and early detection of developing issues. The Audi Telemetry Monitoring Platform was created to help owners stay informed about their vehicle's health, remain on schedule with preventative maintenance, and identify potential problems before they become costly repairs.
 
-The idea for this project came from my own experience after facing thousands of dollars in repairs that may have been prevented—or at least spread out over time—had I paid closer attention to the recommended maintenance intervals for my vehicle. That experience inspired me to build a tool that could provide better visibility into a vehicle's overall health and help owners make more informed maintenance decisions.
+The idea for this project came from my own experience after facing thousands of dollars in repairs that may have been prevented, or at least spread out over time, had I paid closer attention to the recommended maintenance intervals for my vehicle. That experience inspired me to build a tool that could provide better visibility into a vehicle's overall health and help owners make more informed maintenance decisions.
 
 This project also serves as a professional portfolio piece. Rather than building a small practice application, I wanted to create a real system that demonstrates the skills expected of an IT Automation professional. From project planning and documentation to Python development, data collection, dashboards, version control, testing, and automation, this project is an opportunity to experience the complete software development lifecycle while documenting the engineering decisions made along the way.
 
