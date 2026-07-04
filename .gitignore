@@ -1,0 +1,25 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+
+# VS Code workspace settings
+.vscode/
+
+# Local databases
+data/*.db
+data/*.sqlite
+
+# Exported data
+data/*.csv
+
+# Operating system files
+Thumbs.db
+Desktop.ini
+.DS_Store
