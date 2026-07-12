@@ -1,4 +1,6 @@
-engine_rpm: int = 850
+import random
+
+engine_rpm: int = random.randint(750, 900)
 vehicle_speed_mph: int = 0
 coolant_temperature_f: int = 190
 battery_voltage: float = 12.6
