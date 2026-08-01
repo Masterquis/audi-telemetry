@@ -1,15 +1,15 @@
 import random
 import time
 
-vehicle_speed_mph: int = 0
-coolant_temperature_f: int = 190
-battery_voltage: float = 12.6
-
-def generate_telemetry() -> int: 
+def generate_telemetry() -> tuple[int, int, int, float]:
     engine_rpm: int = random.randint(750, 900)
-    return engine_rpm
+    vehicle_speed_mph: int = 0
+    coolant_temperature_f: int = 190
+    battery_voltage: float = 12.6
 
-def display_telemetry(engine_rpm) -> None:
+    return engine_rpm, vehicle_speed_mph, coolant_temperature_f, battery_voltage
+
+def display_telemetry(engine_rpm: int, vehicle_speed_mph: int, coolant_temperature_f: int, battery_voltage: float) -> None:
     print("=== Audi Telemetry Snapshot ===")
     print()
 
@@ -20,6 +20,6 @@ def display_telemetry(engine_rpm) -> None:
     print()
 
 while True:
-    engine_rpm: int = generate_telemetry()
-    display_telemetry(engine_rpm)
+    engine_rpm, vehicle_speed_mph, coolant_temperature_f, battery_voltage = generate_telemetry()
+    display_telemetry(engine_rpm, vehicle_speed_mph, coolant_temperature_f, battery_voltage)
     time.sleep(1)
