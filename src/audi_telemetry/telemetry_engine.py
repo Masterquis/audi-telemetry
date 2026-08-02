@@ -10,14 +10,17 @@ class Telemetry:
     battery_voltage: float
 
 telemetry: Telemetry = Telemetry(
-        engine_rpm = 850, 
-        vehicle_speed_mph = 0, 
-        coolant_temperature_f = 190,
-        battery_voltage = 12.6
+    engine_rpm = 850, 
+    vehicle_speed_mph = 0, 
+    coolant_temperature_f = 190,
+    battery_voltage = 12.6
 )
 
 def update_telemetry(telemetry: Telemetry) -> None:
-    telemetry.engine_rpm = random.randint(750, 900)
+    rpm_change: int = random.randint(-5, 5)
+    proposed_rpm: int = telemetry.engine_rpm + rpm_change
+
+    telemetry.engine_rpm = max(750, min(proposed_rpm, 900))
 
 
 def display_telemetry(telemetry: Telemetry) -> None:
