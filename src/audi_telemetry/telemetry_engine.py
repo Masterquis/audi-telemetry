@@ -9,18 +9,16 @@ class Telemetry:
     coolant_temperature_f: int
     battery_voltage: float
 
-def generate_telemetry() -> Telemetry:
-    engine_rpm: int = random.randint(750, 900)
-    vehicle_speed_mph: int = 0
-    coolant_temperature_f: int = 190
-    battery_voltage: float = 12.6
+telemetry: Telemetry = Telemetry(
+        engine_rpm = 850, 
+        vehicle_speed_mph = 0, 
+        coolant_temperature_f = 190,
+        battery_voltage = 12.6
+)
 
-    return Telemetry(
-        engine_rpm=engine_rpm, 
-        vehicle_speed_mph=vehicle_speed_mph, 
-        coolant_temperature_f=coolant_temperature_f,
-        battery_voltage=battery_voltage
-    )
+def update_telemetry(telemetry: Telemetry) -> None:
+    telemetry.engine_rpm = random.randint(750, 900)
+
 
 def display_telemetry(telemetry: Telemetry) -> None:
     print("=== Audi Telemetry Snapshot ===")
@@ -33,6 +31,6 @@ def display_telemetry(telemetry: Telemetry) -> None:
     print()
 
 while True:
-    telemetry: Telemetry = generate_telemetry()
+    update_telemetry(telemetry)
     display_telemetry(telemetry)
     time.sleep(1)
