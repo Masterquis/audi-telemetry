@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import random
 import time
 
@@ -15,6 +15,9 @@ telemetry: Telemetry = Telemetry(
     coolant_temperature_f = 70,
     battery_voltage = 14.2
 )
+
+telemetry_history: list[Telemetry] = []
+
 
 def update_telemetry(telemetry: Telemetry) -> None:
     rpm_change: int = random.randint(-5, 5)
@@ -38,6 +41,14 @@ def update_telemetry(telemetry: Telemetry) -> None:
     telemetry.battery_voltage = round(max(13.5, min(proposed_voltage, 14.8)), 2)
 
 
+def capture_telemetry(telemetry: Telemetry) -> Telemetry:
+    snapshot: Telemetry = replace(telemetry)
+    return snapshot
+
+
+def store_telemetry(telemetry_history: list[Telemetry], snapshot: Telemetry) -> None:
+    telemetry_history.append(snapshot)
+
 
 def display_telemetry(telemetry: Telemetry) -> None:
     print("=== Audi Telemetry Snapshot ===")
@@ -49,7 +60,31 @@ def display_telemetry(telemetry: Telemetry) -> None:
     print(f"Battery Voltage: {telemetry.battery_voltage:.2f} V")
     print()
 
-while True:
+for _ in range(5):
     update_telemetry(telemetry)
+
+    snapshot: Telemetry = capture_telemetry(telemetry)
+    store_telemetry(telemetry_history, snapshot)
+
     display_telemetry(telemetry)
     time.sleep(1)
+
+
+highest_rpm: int = telemetry_history[0].engine_rpm
+
+for snapshot in telemetry_history:
+    if snapshot.engine_rpm > highest_rpm:
+        highest_rpm = snapshot.engine_rpm
+
+print("=== Telemetry History Statistics ===")
+print(f"History Count: {len(telemetry_history)} entries")
+print(f"Highest RPM: {highest_rpm} RPM")
+
+
+#for snapshot in telemetry_history:
+    #print(
+        #f"Engine RPM: {snapshot.engine_rpm} RPM, "
+        #f"Speed: {snapshot.vehicle_speed_mph} mph, "
+        #f"Coolant Temperature: {snapshot.coolant_temperature_f} F, "
+        #f"Battery Voltage: {snapshot.battery_voltage:.2f} V"
+    #)
