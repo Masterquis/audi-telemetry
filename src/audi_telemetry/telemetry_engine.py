@@ -1,6 +1,11 @@
 from dataclasses import dataclass, replace
 import random
 import time
+import sqlite3
+import datetime
+
+connection = sqlite3.connect("telemetry.db")
+cursor = connection.cursor()
 
 @dataclass 
 class Telemetry:
@@ -8,12 +13,15 @@ class Telemetry:
     vehicle_speed_mph: int
     coolant_temperature_f: int
     battery_voltage: float
+    captured_at: datetime.datetime
+
 
 telemetry: Telemetry = Telemetry(
     engine_rpm = 850, 
     vehicle_speed_mph = 0, 
     coolant_temperature_f = 70,
-    battery_voltage = 14.2
+    battery_voltage = 14.2,
+    captured_at = datetime.datetime.now(datetime.timezone.utc)
 )
 
 telemetry_history: list[Telemetry] = []
@@ -42,7 +50,8 @@ def update_telemetry(telemetry: Telemetry) -> None:
 
 
 def capture_telemetry(telemetry: Telemetry) -> Telemetry:
-    snapshot: Telemetry = replace(telemetry)
+    snapshot: Telemetry = replace(telemetry, captured_at = datetime.datetime.now(datetime.timezone.utc)
+)
     return snapshot
 
 
@@ -50,14 +59,19 @@ def store_telemetry(telemetry_history: list[Telemetry], snapshot: Telemetry) -> 
     telemetry_history.append(snapshot)
 
 
-def display_telemetry(telemetry: Telemetry) -> None:
+def display_telemetry(snapshot: Telemetry) -> None:
+    local_time = snapshot.captured_at.astimezone()
+    formatted_time = local_time.strftime("%Y-%m-%d %H:%M:%S")
+
+
     print("=== Audi Telemetry Snapshot ===")
     print()
 
-    print(f"Engine RPM: {telemetry.engine_rpm} RPM")
-    print(f"Vehicle Speed: {telemetry.vehicle_speed_mph} mph")
-    print(f"Coolant Temperature: {telemetry.coolant_temperature_f} °F")
-    print(f"Battery Voltage: {telemetry.battery_voltage:.2f} V")
+    print(f"Engine RPM: {snapshot.engine_rpm} RPM")
+    print(f"Vehicle Speed: {snapshot.vehicle_speed_mph} mph")
+    print(f"Coolant Temperature: {snapshot.coolant_temperature_f} °F")
+    print(f"Battery Voltage: {snapshot.battery_voltage:.2f} V")
+    print(f"Timestamp: {formatted_time}")
     print()
 
 for _ in range(5):
@@ -66,7 +80,7 @@ for _ in range(5):
     snapshot: Telemetry = capture_telemetry(telemetry)
     store_telemetry(telemetry_history, snapshot)
 
-    display_telemetry(telemetry)
+    display_telemetry(snapshot)
     time.sleep(1)
 
 
@@ -79,6 +93,8 @@ for snapshot in telemetry_history:
 print("=== Telemetry History Statistics ===")
 print(f"History Count: {len(telemetry_history)} entries")
 print(f"Highest RPM: {highest_rpm} RPM")
+
+connection.close()
 
 
 #for snapshot in telemetry_history:

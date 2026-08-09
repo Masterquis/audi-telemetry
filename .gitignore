@@ -15,6 +15,7 @@ venv/
 # Local databases
 data/*.db
 data/*.sqlite
+*.db
 
 # Exported data
 data/*.csv
