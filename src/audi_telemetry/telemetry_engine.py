@@ -7,6 +7,19 @@ import datetime
 connection = sqlite3.connect("telemetry.db")
 cursor = connection.cursor()
 
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS telemetry (
+    id INTEGER PRIMARY KEY,
+    captured_at TEXT NOT NULL,
+    engine_rpm INTEGER NOT NULL,
+    vehicle_speed_mph INTEGER NOT NULL,
+    coolant_temperature_f INTEGER NOT NULL,
+    battery_voltage REAL NOT NULL
+    )
+""")
+
+connection.commit()
+
 @dataclass 
 class Telemetry:
     engine_rpm: int
