@@ -4,21 +4,6 @@ import time
 import sqlite3
 import datetime
 
-connection = sqlite3.connect("telemetry.db")
-cursor = connection.cursor()
-
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS telemetry (
-    id INTEGER PRIMARY KEY,
-    captured_at TEXT NOT NULL,
-    engine_rpm INTEGER NOT NULL,
-    vehicle_speed_mph INTEGER NOT NULL,
-    coolant_temperature_f INTEGER NOT NULL,
-    battery_voltage REAL NOT NULL
-    )
-""")
-
-connection.commit()
 
 @dataclass 
 class Telemetry:
@@ -87,33 +72,74 @@ def display_telemetry(snapshot: Telemetry) -> None:
     print(f"Timestamp: {formatted_time}")
     print()
 
-for _ in range(5):
+
+def save_telemetry(cursor: sqlite3.Cursor, snapshot: Telemetry) -> None:
+    cursor.execute(
+        """
+        INSERT INTO telemetry(
+            captured_at,
+            engine_rpm,
+            vehicle_speed_mph,
+            coolant_temperature_f,
+            battery_voltage
+        )
+        VALUES(?,?,?,?,?)
+        """,
+        (
+            snapshot.captured_at.isoformat(),
+            snapshot.engine_rpm,
+            snapshot.vehicle_speed_mph,
+            snapshot.coolant_temperature_f,
+            snapshot.battery_voltage
+        )
+    )
+
+
+def initialize_database(connection: sqlite3.Connection, cursor: sqlite3.Cursor) -> None:
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS telemetry (
+        id INTEGER PRIMARY KEY,
+        captured_at TEXT NOT NULL,
+        engine_rpm INTEGER NOT NULL,
+        vehicle_speed_mph INTEGER NOT NULL,
+        coolant_temperature_f INTEGER NOT NULL,
+        battery_voltage REAL NOT NULL
+        )
+    """)
+
+    connection.commit()
+
+
+
+def main() -> None:
+    connection = sqlite3.connect("telemetry.db")
+    cursor = connection.cursor()
+
+    initialize_database(connection, cursor)
+
     update_telemetry(telemetry)
 
     snapshot: Telemetry = capture_telemetry(telemetry)
+
+    save_telemetry(cursor, snapshot)
+    connection.commit()
+        
     store_telemetry(telemetry_history, snapshot)
-
     display_telemetry(snapshot)
-    time.sleep(1)
+
+    highest_rpm: int = telemetry_history[0].engine_rpm
+
+    for snapshot in telemetry_history:
+        if snapshot.engine_rpm > highest_rpm:
+            highest_rpm = snapshot.engine_rpm
+
+    print("=== Telemetry History Statistics ===")
+    print(f"History Count: {len(telemetry_history)} entries")
+    print(f"Highest RPM: {highest_rpm} RPM")
 
 
-highest_rpm: int = telemetry_history[0].engine_rpm
-
-for snapshot in telemetry_history:
-    if snapshot.engine_rpm > highest_rpm:
-        highest_rpm = snapshot.engine_rpm
-
-print("=== Telemetry History Statistics ===")
-print(f"History Count: {len(telemetry_history)} entries")
-print(f"Highest RPM: {highest_rpm} RPM")
-
-connection.close()
+    connection.close()
 
 
-#for snapshot in telemetry_history:
-    #print(
-        #f"Engine RPM: {snapshot.engine_rpm} RPM, "
-        #f"Speed: {snapshot.vehicle_speed_mph} mph, "
-        #f"Coolant Temperature: {snapshot.coolant_temperature_f} F, "
-        #f"Battery Voltage: {snapshot.battery_voltage:.2f} V"
-    #)
+if __name__ == "__main__":
+    main()
