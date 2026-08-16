@@ -14,15 +14,7 @@ class Telemetry:
     captured_at: datetime.datetime
 
 
-telemetry: Telemetry = Telemetry(
-    engine_rpm = 850, 
-    vehicle_speed_mph = 0, 
-    coolant_temperature_f = 70,
-    battery_voltage = 14.2,
-    captured_at = datetime.datetime.now(datetime.timezone.utc)
-)
 
-telemetry_history: list[Telemetry] = []
 
 
 def update_telemetry(telemetry: Telemetry) -> None:
@@ -51,10 +43,6 @@ def capture_telemetry(telemetry: Telemetry) -> Telemetry:
     snapshot: Telemetry = replace(telemetry, captured_at = datetime.datetime.now(datetime.timezone.utc)
 )
     return snapshot
-
-
-def store_telemetry(telemetry_history: list[Telemetry], snapshot: Telemetry) -> None:
-    telemetry_history.append(snapshot)
 
 
 def display_telemetry(snapshot: Telemetry) -> None:
@@ -112,34 +100,49 @@ def initialize_database(connection: sqlite3.Connection, cursor: sqlite3.Cursor) 
 
 
 def main() -> None:
+    telemetry: Telemetry = Telemetry(
+        engine_rpm = 850, 
+        vehicle_speed_mph = 0, 
+        coolant_temperature_f = 70,
+        battery_voltage = 14.2,
+        captured_at = datetime.datetime.now(datetime.timezone.utc)
+    )
+    
     connection = sqlite3.connect("telemetry.db")
     cursor = connection.cursor()
 
-    initialize_database(connection, cursor)
+    try:
+        initialize_database(connection, cursor)
 
-    update_telemetry(telemetry)
-
-    snapshot: Telemetry = capture_telemetry(telemetry)
-
-    save_telemetry(cursor, snapshot)
-    connection.commit()
+        cursor.execute("""
+                SELECT MAX(engine_rpm),
+                COUNT(*),
+                AVG(battery_voltage)
+                FROM telemetry
+            """)
         
-    store_telemetry(telemetry_history, snapshot)
-    display_telemetry(snapshot)
+        highest_rpm, count, avg_voltage = cursor.fetchone()
 
-    highest_rpm: int = telemetry_history[0].engine_rpm
+        print("=== Telemetry History Statistics ===")
+        print(f"Highest RPM: {highest_rpm} RPM")
+        print(f"History Count: {count} entries")
+        print(f"Average Battery Voltage: {avg_voltage:.2f} V")
+        
 
-    for snapshot in telemetry_history:
-        if snapshot.engine_rpm > highest_rpm:
-            highest_rpm = snapshot.engine_rpm
+        while True:
+            update_telemetry(telemetry)
 
-    print("=== Telemetry History Statistics ===")
-    print(f"History Count: {len(telemetry_history)} entries")
-    print(f"Highest RPM: {highest_rpm} RPM")
+            snapshot: Telemetry = capture_telemetry(telemetry)
 
+            save_telemetry(cursor, snapshot)
+            connection.commit()
+                
+            display_telemetry(snapshot)
 
-    connection.close()
+            time.sleep(1)
 
+    finally:
+        connection.close()
 
 if __name__ == "__main__":
     main()
