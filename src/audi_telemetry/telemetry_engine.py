@@ -1,9 +1,16 @@
 from dataclasses import dataclass, replace
+import logging
 import random
 import time
 import sqlite3
 import datetime
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 @dataclass 
 class Telemetry:
@@ -127,6 +134,10 @@ def display_statistics(cursor: sqlite3.Cursor) -> None:
 
 
 def main() -> None:
+
+    print()
+    logger.info("Telemetry collector started")
+    print()
     telemetry: Telemetry = Telemetry(
         engine_rpm = 850, 
         vehicle_speed_mph = 0, 
@@ -139,25 +150,39 @@ def main() -> None:
     cursor = connection.cursor()
 
     try:
-        initialize_database(connection, cursor)
 
-        while True:
-            update_telemetry(telemetry)
+        try:
+            initialize_database(connection, cursor)
+            logger.info("Database initialized")
+        except sqlite3.Error:
+            logger.exception("Failed to initialize database.")
+            raise
 
-            snapshot: Telemetry = capture_telemetry(telemetry)
+        try:
+            while True:
+                update_telemetry(telemetry)
 
-            save_telemetry(cursor, snapshot)
-            connection.commit()
-                
-            display_telemetry(snapshot)
+                snapshot: Telemetry = capture_telemetry(telemetry)
 
-            time.sleep(1)
-    except KeyboardInterrupt:
-        display_statistics(cursor)
+                try:
+                    save_telemetry(cursor, snapshot)
+                    connection.commit()
+                except sqlite3.Error:
+                    logger.exception("Failed to save telemetry snapshot.")
+                    raise
+                    
+                display_telemetry(snapshot)
 
+                time.sleep(1)
 
+        except KeyboardInterrupt:
+            logger.info("Telemetry collector stopped by user")
+            display_statistics(cursor)
+        
     finally:
         connection.close()
+        print()
+        logger.info("Database connection closed")
 
 if __name__ == "__main__":
     main()
