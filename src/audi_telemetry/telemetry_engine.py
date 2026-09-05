@@ -97,6 +97,33 @@ def initialize_database(connection: sqlite3.Connection, cursor: sqlite3.Cursor) 
 
     connection.commit()
 
+def display_statistics(cursor: sqlite3.Cursor) -> None:
+    print()
+    print("Telemetry collection stopped.")
+    print()
+
+    cursor.execute("""
+                    SELECT MAX(engine_rpm),
+                    COUNT(*),
+                    AVG(battery_voltage),
+                    MAX(vehicle_speed_mph),
+                    MAX(coolant_temperature_f)
+                    FROM telemetry
+                """)
+            
+    highest_rpm, count, avg_voltage, highest_speed, highest_temperature = cursor.fetchone()
+
+    print("=== Telemetry History Statistics ===")
+
+    if count == 0:
+        print("No telemetry data available.")
+    else:
+        print(f"Highest RPM: {highest_rpm} RPM")
+        print(f"History Count: {count} entries")
+        print(f"Average Battery Voltage: {avg_voltage:.2f} V")
+        print(f"Highest Speed: {highest_speed} mph")
+        print(f"Highest Coolant Temperature: {highest_temperature} °F")
+
 
 
 def main() -> None:
@@ -114,21 +141,6 @@ def main() -> None:
     try:
         initialize_database(connection, cursor)
 
-        cursor.execute("""
-                SELECT MAX(engine_rpm),
-                COUNT(*),
-                AVG(battery_voltage)
-                FROM telemetry
-            """)
-        
-        highest_rpm, count, avg_voltage = cursor.fetchone()
-
-        print("=== Telemetry History Statistics ===")
-        print(f"Highest RPM: {highest_rpm} RPM")
-        print(f"History Count: {count} entries")
-        print(f"Average Battery Voltage: {avg_voltage:.2f} V")
-        
-
         while True:
             update_telemetry(telemetry)
 
@@ -140,6 +152,9 @@ def main() -> None:
             display_telemetry(snapshot)
 
             time.sleep(1)
+    except KeyboardInterrupt:
+        display_statistics(cursor)
+
 
     finally:
         connection.close()
