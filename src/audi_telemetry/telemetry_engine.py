@@ -4,9 +4,15 @@ import random
 import time
 import sqlite3
 import datetime
+import argparse
+
+SAMPLE_INTERVAL_SECONDS = 1
+DATABASE_PATH = "telemetry.db"
+LOG_LEVEL = logging.INFO
+
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=LOG_LEVEL,
     format="%(asctime)s %(levelname)s %(message)s"
 )
 
@@ -131,12 +137,39 @@ def display_statistics(cursor: sqlite3.Cursor) -> None:
         print(f"Highest Speed: {highest_speed} mph")
         print(f"Highest Coolant Temperature: {highest_temperature} °F")
 
+def positive_float(value: str) -> float:
+    try:
+        interval = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "sample interval must be a number greater than 0 seconds"
+        )
 
+    if interval <= 0:
+        raise argparse.ArgumentTypeError(
+            "sample interval must be a number greater than 0 seconds"
+        )
+
+    return interval
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--interval",
+        type = positive_float,
+        default = SAMPLE_INTERVAL_SECONDS,
+        help = "Telemetry sample interval in seconds."
+    )
+    args = parser.parse_args()
+    return args
 
 def main() -> None:
 
+    args = parse_arguments()
+
     print()
     logger.info("Telemetry collector started")
+    logger.info("Sample interval: %s seconds", args.interval)
     print()
     telemetry: Telemetry = Telemetry(
         engine_rpm = 850, 
@@ -146,7 +179,7 @@ def main() -> None:
         captured_at = datetime.datetime.now(datetime.timezone.utc)
     )
     
-    connection = sqlite3.connect("telemetry.db")
+    connection = sqlite3.connect(DATABASE_PATH)
     cursor = connection.cursor()
 
     try:
@@ -173,7 +206,7 @@ def main() -> None:
                     
                 display_telemetry(snapshot)
 
-                time.sleep(1)
+                time.sleep(args.interval)
 
         except KeyboardInterrupt:
             logger.info("Telemetry collector stopped by user")
